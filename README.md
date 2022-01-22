@@ -1,1 +1,2 @@
-# msc_attention_project
+# Attentional Mechanisms for Convolutional Neural Networks - MSc Project
+nothing to see here...
