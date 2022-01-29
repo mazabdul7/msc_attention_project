@@ -7,7 +7,7 @@ from typing import Tuple, Iterator
 
 class DataLoader:
     def __init__(self, batch_size: int, target_size: Tuple[int]) -> None:
-        # Paths relative to working directory
+        # ImageNet path within server
         self.base_path = r'/fast-data22/datasets/daniel/0_imagenet_split'
         self.train_path = r'train'
         self.test_path = r'val'
