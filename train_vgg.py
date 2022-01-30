@@ -3,8 +3,8 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Must be set before importing TF to su
 import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import numpy as np
-from loader import DataLoader
-from utils import test_model
+from utils.loader import DataLoader
+from utils.tools import test_model
 
 # Set configs
 img_height = 224
