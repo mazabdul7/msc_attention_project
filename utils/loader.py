@@ -4,10 +4,11 @@
 import os
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from typing import Tuple, Iterator
+import random
 
 class DataLoader:
     def __init__(self, batch_size: int, target_size: Tuple[int]) -> None:
-        # ImageNet path within server
+        # Paths relative to working directory
         self.base_path = r'/fast-data22/datasets/daniel/0_imagenet_split'
         self.train_path = r'train'
         self.test_path = r'val'
@@ -15,6 +16,7 @@ class DataLoader:
         # Configs
         self.batch_size = batch_size
         self.target_size = target_size
+        self.seed = random.randint(0, 1000)
 
     def load_ds_generator(self, aug_train: ImageDataGenerator, aug_test: ImageDataGenerator) -> Iterator:
         ''' 
@@ -26,13 +28,25 @@ class DataLoader:
                 os.path.join(self.base_path, self.train_path),
                 target_size=self.target_size,
                 batch_size=self.batch_size,
-                class_mode='sparse')
+                class_mode='sparse',
+                seed=self.seed,
+                subset='training')
         
-        print('Loading test set...')
-        validation_generator = aug_test.flow_from_directory(
-                os.path.join(self.base_path, self.test_path),
+        print('Loading validation set...')
+        val_generator = aug_train.flow_from_directory(
+                os.path.join(self.base_path, self.train_path),
                 target_size=self.target_size,
                 batch_size=self.batch_size,
-                class_mode='sparse')
+                class_mode='categorical',
+                seed=self.seed,
+                subset='validation')
+        
+        print('Loading test set...')
+        test_generator = aug_test.flow_from_directory(
+                os.path.join(self.base_path, self.test_path),
+                target_size=self.target_size,
+                batch_size=1,
+                class_mode=None,
+                shuffle=False)
 
-        return train_generator, validation_generator
+        return train_generator, val_generator, test_generator
