@@ -3,7 +3,8 @@
 #
 import os
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from typing import Tuple, Iterator
+from data_sampler import CustomDataGenerator, CustomIterator
+from typing import Tuple
 import random
 
 class DataLoader:
@@ -18,7 +19,7 @@ class DataLoader:
         self.target_size = target_size
         self.seed = random.randint(0, 1000)
 
-    def load_ds_generator(self, aug_train: ImageDataGenerator, aug_test: ImageDataGenerator) -> Iterator:
+    def load_ds_generator(self, aug_train: CustomDataGenerator, aug_test: CustomDataGenerator) -> CustomIterator:
         ''' 
             Loads and returns batched tf.Dataset generator object from passed path. 
             If val: loads validation set. 
