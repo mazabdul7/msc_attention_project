@@ -15,7 +15,7 @@ class CustomIterator(DirectoryIterator):
         classes = [self.class_indices[t_class] for t_class in target_classes]
 
         for cl in range(self.num_classes):
-            self.cls_to_file_idx[cl] = list(np.nonzero(self.classes==cl)[0])
+            self.cls_to_file_idx[cl] = list(np.nonzero(np.array(self.classes)==cl)[0])
 
         self.weights = target_weights
         self.target_classes = classes
