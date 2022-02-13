@@ -1,16 +1,15 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Must be set before importing TF to supress messages
 import tensorflow as tf
-#from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import numpy as np
-from loader import DataLoader
-from utils import test_model
-from data_sampler import CustomDataGenerator
+from utils.loader import DataLoader
+from utils.tools import test_model
+from utils.data_sampler import CustomDataGenerator
 
 # Set configs
 img_height = 224
 img_width = 224
-batch_size = 64
+batch_size = 16
 epochs = 3
 
 # Build our augmentation
@@ -24,9 +23,10 @@ test_datagen = CustomDataGenerator(rescale=1./255)
 # Load ImageNet dataset with the VGG augmentation
 loader = DataLoader(batch_size, (img_height, img_width))
 train_set, val_set, test_set = loader.load_ds_generator(train_datagen, test_datagen)
-train_set.set
-print(train_set)
-dsds
+train_set.set_subsample(['n03873416'], [3/1000])
+train_set._set_index_array()
+#print(f'\nLabels are: {next(train_set)[1]}\n\nEntire index_arry for ds = {len(train_set.index_array)}') # Print labels
+
 # Load VGG-16 with default as we are not transfer learning
 model = tf.keras.applications.vgg16.VGG16(input_shape=(img_height, img_width, 3))
 model.trainable = True

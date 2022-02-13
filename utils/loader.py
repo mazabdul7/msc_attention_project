@@ -2,7 +2,6 @@
 # Loader that returns a generator 
 #
 import os
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from data_sampler import CustomDataGenerator, CustomIterator
 from typing import Tuple
 import random
