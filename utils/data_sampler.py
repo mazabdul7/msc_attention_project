@@ -7,7 +7,7 @@ class CustomIterator(DirectoryIterator):
         self.num_classes = len(self.class_indices)
         self.weights = None
         self.target_classes = None
-        self.cls_to_file_idx = None
+        self.cls_to_file_idx = dict()
 
     def set_subsample(self, target_classes, target_weights):
         ''' Takes args for fixed target classes and their desired spread amongst other classes. '''
