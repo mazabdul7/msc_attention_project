@@ -34,7 +34,7 @@ model.trainable = True
 
 # Compile (not using original e-2 of paper)
 model.compile(optimizer=tf.keras.optimizers.Adam(1e-5),
-              loss= tf.keras.losses.CategoricalCrossentropy(),
+              loss= tf.keras.losses.SparseCategoricalCrossentropy(),
               metrics=['accuracy'])
 
 # Test current accuracy on test-set (should be 76.3)
