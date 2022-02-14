@@ -25,7 +25,7 @@ test_datagen = CustomDataGenerator(
 # Load ImageNet dataset with the VGG augmentation
 loader = DataLoader(batch_size, (img_height, img_width))
 train_set, val_set, test_set = loader.load_ds_generator(train_datagen, test_datagen)
-train_set.set_subsample(['n03873416'], [5/1000]) # No subsampling
+train_set.set_subsample(['n03873416'], [5/1000]) # Subsample to get smaller ImageNet set for faster training
 train_set._set_index_array()
 
 # Load VGG-16 with default as we are not transfer learning
@@ -40,7 +40,7 @@ model.compile(optimizer=tf.keras.optimizers.Adam(1e-5),
 # Test current accuracy on test-set (should be 76.3)
 test_model(model, test_set)
 
-# Train for 5 epochs
+# Train
 model.fit(train_set, validation_data=val_set, epochs=epochs, steps_per_epoch=train_set.n//batch_size, validation_steps=val_set.n//batch_size, verbose=1)
 
 # Test new accuracy on test-set
