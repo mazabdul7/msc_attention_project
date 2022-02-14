@@ -3,9 +3,9 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Must be set before importing TF to su
 os.environ["CUDA_VISIBLE_DEVICES"]= '3'
 import tensorflow as tf
 import numpy as np
-from loader import DataLoader
-from utils import test_model
-from data_sampler import CustomDataGenerator
+from utils.loader import DataLoader
+from utils.tools import test_model
+from utils.data_sampler import CustomDataGenerator
 print(tf.config.list_physical_devices('GPU'))
 
 # Set configs
