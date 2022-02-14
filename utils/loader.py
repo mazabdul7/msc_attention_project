@@ -2,16 +2,16 @@
 # Loader that returns a generator 
 #
 import os
-from data_sampler import CustomDataGenerator, CustomIterator
+from utils.data_sampler import CustomDataGenerator, CustomIterator
 from typing import Tuple
 import random
 
 class DataLoader:
     def __init__(self, batch_size: int, target_size: Tuple[int]) -> None:
         # Paths relative to working directory
-        self.base_path = r'/fast-data22/datasets/daniel/0_imagenet_split'
+        self.base_path = r'/fast-data22/datasets/ILSVRC/2012/clsloc'
         self.train_path = r'train'
-        self.test_path = r'val'
+        self.test_path = r'val_white'
 
         # Configs
         self.batch_size = batch_size
