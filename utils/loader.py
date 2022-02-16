@@ -52,7 +52,7 @@ class DataLoader:
             CustomIterator: TensorFlow directory iterator.
         """
         print('Loading validation set...')
-        val_generator = aug_train.flow_from_directory(
+        val_generator = aug_val.flow_from_directory(
                 os.path.join(self.base_path, self.train_path),
                 target_size=self.target_size,
                 batch_size=self.batch_size,
