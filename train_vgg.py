@@ -57,6 +57,7 @@ def main(img_height: int, img_width: int, batch_size: int, lr: int, epochs: int,
     batch_size = batch_size
     epochs = epochs
     lr = lr
+    log_path = os.path.join(config['logs_path'], 'vgg_training.csv')
 
     # Set augmentation and pre-processing
     train_datagen = CustomDataGenerator(
@@ -79,17 +80,20 @@ def main(img_height: int, img_width: int, batch_size: int, lr: int, epochs: int,
         train_set._set_index_array()
 
     # Load VGG-16 with default as we are not transfer learning
-    model = load_VGG_model(img_height=img_height, img_width=img_width, lr=lr, loss=tf.keras.losses.SparseCategoricalCrossentropy, metrics=['accuracy'], trainable=True)
+    model = load_VGG_model(img_height=img_height, img_width=img_width, lr=lr, loss=tf.keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'], trainable=True)
 
-    # Test current accuracy on test-set (should be 76.3)
-    test_model(model, test_set)
+    # Test current accuracy on test-set
+    #test_model(model, test_set)
 
     # Train and use CSV logger to store logs
-    csv_logger = CSVLogger(config['logs_path']+'vgg_training', separator=',', append=False)
+    if not os.path.exists(log_path):
+        with open(log_path, "w") as my_empty_csv: pass
+
+    csv_logger = CSVLogger(log_path, separator=',', append=False)
     train_history = train_model(model=model, train_set=train_set, val_set=val_set, epochs=epochs, batch_size=batch_size, callbacks=[csv_logger])
 
     # Test new accuracy on test-set
     test_model(model, test_set)
 
 if __name__ == '__main__':
-    main(img_height=224, img_width=224, batch_size=64, lr=1e-5, epochs=2, set_subsample=True, target_classes=['n03873416'], target_weights=[5/1000])
+    main(img_height=224, img_width=224, batch_size=64, lr=1e-5, epochs=5, set_subsample=True, target_classes=['n03873416'], target_weights=[5/1000])
