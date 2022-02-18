@@ -9,10 +9,12 @@ class CustomIterator(DirectoryIterator):
         self.num_classes = len(self.class_indices)
         self.weights = None
         self.target_classes = None
+        self.subsample_size = None
+        self.old_n = int(self.n)
         self.cls_to_file_idx = dict()
 
-    def set_subsample(self, target_classes: List[str], target_weights: List[int]) -> None:
-        """ Enables and sets sub-sampling weights for the target classes.
+    def set_target_sampling(self, target_classes: List[str], target_weights: List[int]) -> None:
+        """ Enables and sets targetted sub-sampling weights for the target classes.
 
         Args:
             target_classes (List[str]): The target class folder name to fix sampling weights to.
@@ -24,6 +26,7 @@ class CustomIterator(DirectoryIterator):
             uniformly randomly sampled across all remaining non-target classes. 
             Note: The largest specified weighted target class is loaded in its ENTIRETY, and therefore determines the final dataset size.
         """
+        self.reset_subsampling()
         assert sum(target_weights) <= 1
         classes = [self.class_indices[t_class] for t_class in target_classes] # Converts string folder name class to actual inner class mapping
 
@@ -33,18 +36,37 @@ class CustomIterator(DirectoryIterator):
 
         self.weights = target_weights
         self.target_classes = classes
+
+    def set_subsampling(self, size: int) -> None:
+        """ Set subsampling with no target classes.
+
+        Args:
+            size (int): Size of ImageNet sample.
+        """
+        self.reset_target_sampling()
+        self.subsample_size = size
+
+    def reset_subsampling(self) -> None:
+        """ Disable sub-sampling and reset dataset size.
+        """
+        self.subsample_size = None
+        self.n = self.old_n
     
-    def reset_subsample(self) -> None:
-        """ Disable sub-sampling.
+    def reset_target_sampling(self) -> None:
+        """ Disable target class sub-sampling and reset dataset size.
         """
         self.target_classes = None
         self.weights = None
+        self.n = self.old_n
 
     def _set_index_array(self):
         """ Generates the index array according to the set sub-sampling rates. If sub-sampling is disabled uses entire default ImageNet.
         """
         if not self.target_classes:
             self.index_array = np.arange(self.n)
+            if self.subsample_size:
+                self.index_array = np.random.choice(self.index_array, replace=False, size=self.subsample_size)
+                self.n = int(self.subsample_size)
         else:
             self.index_array = []
             max_cl = np.argmax(self.weights)
@@ -62,6 +84,7 @@ class CustomIterator(DirectoryIterator):
                         remaining_classes.extend(self.cls_to_file_idx[cl])
                 sample = np.random.choice(remaining_classes, replace=False, size=int(remainder))
                 self.index_array.extend(sample)
+            self.n = int(max_size)
 
         if self.shuffle:
             np.random.shuffle(self.index_array)

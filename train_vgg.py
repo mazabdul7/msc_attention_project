@@ -1,4 +1,5 @@
 import os
+from random import sample
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Must be set before importing TF to supress messages
 os.environ["CUDA_VISIBLE_DEVICES"]= '3'
 
@@ -49,7 +50,7 @@ def train_model(model: tf.keras.Model, train_set: CustomIterator, val_set: Custo
 
     return history
 
-def main(img_height: int, img_width: int, batch_size: int, lr: int, epochs: int, set_subsample: bool=False, target_classes: List[str]=None, target_weights: List[int]=None) -> None:
+def main(img_height: int, img_width: int, batch_size: int, lr: int, epochs: int, set_subsample: bool=False, sample_size: int= None, target_classes: List[str]=None, target_weights: List[int]=None) -> None:
     """ Main training loop. """
     # Set configs
     img_height = img_height
@@ -76,7 +77,11 @@ def main(img_height: int, img_width: int, batch_size: int, lr: int, epochs: int,
 
     if set_subsample:
         # Enable sub-sampling to get smaller ImageNet set for faster training
-        train_set.set_subsample(target_classes=target_classes, target_weights=target_weights)
+        if target_classes and target_weights:
+            train_set.set_target_sampling(target_classes=target_classes, target_weights=target_weights)
+        elif sample_size:
+            train_set.set_subsampling(sample_size)
+        
         train_set._set_index_array()
 
     # Load VGG-16 with default as we are not transfer learning
@@ -96,4 +101,4 @@ def main(img_height: int, img_width: int, batch_size: int, lr: int, epochs: int,
     test_model(model, test_set)
 
 if __name__ == '__main__':
-    main(img_height=224, img_width=224, batch_size=64, lr=1e-5, epochs=5, set_subsample=True, target_classes=['n03873416'], target_weights=[5/1000])
+    main(img_height=224, img_width=224, batch_size=64, lr=1e-6, epochs=5, set_subsample=True, sample_size=300000)
