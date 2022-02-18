@@ -61,11 +61,13 @@ class CustomIterator(DirectoryIterator):
 
     def _set_index_array(self):
         """ Generates the index array according to the set sub-sampling rates. If sub-sampling is disabled uses entire default ImageNet.
+            Note: This function is naturally called at the end of each epoch through model.fit() - must be called to resample!
         """
         if not self.target_classes:
             self.index_array = np.arange(self.n)
             if self.subsample_size:
-                self.index_array = np.random.choice(self.index_array, replace=False, size=self.subsample_size)
+                sample = np.random.choice(self.index_array, replace=False, size=self.subsample_size)
+                self.index_array = sample
                 self.n = int(self.subsample_size)
         else:
             self.index_array = []
