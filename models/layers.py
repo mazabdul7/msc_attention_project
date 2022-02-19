@@ -13,6 +13,12 @@ class AttentionLayer(tf.keras.layers.Layer):
         )
 
     def call(self, inputs):
+        """ Forward pass performs a depthwise convolution of the attention weights while mixing no channel information.
+
+            Note: The kernel must be expanded to follow [filter_height, filter_width, in_channels, channel_multiplier] where
+            the in_channels can be substituted for a same size attention weight scaling per channel axis, hence performing per channel
+            scaling by the attention weights.
+        """
         return tf.nn.depthwise_conv2d(inputs, self.kernel[tf.newaxis, tf.newaxis, :, tf.newaxis], [1, 1, 1, 1], 'VALID')
 
     def get_config(self):
