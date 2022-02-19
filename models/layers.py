@@ -6,14 +6,14 @@ class AttentionLayer(tf.keras.layers.Layer):
         self.init_vals = init_vals
 
     def build(self, input_shape):
-        self.weights = self.add_weight(
-            shape=(1, input_shape[-1]),
+        self.kernel = self.add_weight(
+            shape=(input_shape[-1],),
             initializer=tf.keras.initializers.Ones(),
             trainable=True
         )
 
     def call(self, inputs):
-        return tf.multiply(inputs, self.w)
+        return tf.nn.depthwise_conv2d(inputs, self.kernel[tf.newaxis, tf.newaxis, :, tf.newaxis], [1, 1, 1, 1], 'VALID')
 
     def get_config(self):
         conf = super().get_config()

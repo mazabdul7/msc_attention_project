@@ -101,4 +101,4 @@ def main(img_height: int, img_width: int, batch_size: int, lr: int, epochs: int,
     test_model(model, test_set)
 
 if __name__ == '__main__':
-    main(img_height=224, img_width=224, batch_size=64, lr=1e-6, epochs=5, set_subsample=True, sample_size=300000)
+    main(img_height=224, img_width=224, batch_size=64, lr=1e-6, epochs=1, set_subsample=True, sample_size=300000)

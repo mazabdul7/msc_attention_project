@@ -33,7 +33,7 @@ class DataLoader:
                 os.path.join(self.base_path, self.train_path),
                 target_size=self.target_size,
                 batch_size=self.batch_size,
-                class_mode='sparse',
+                class_mode=class_mode,
                 seed=self.seed,
                 subset='training',
                 shuffle=shuffle)
@@ -56,7 +56,7 @@ class DataLoader:
                 os.path.join(self.base_path, self.train_path),
                 target_size=self.target_size,
                 batch_size=self.batch_size,
-                class_mode='sparse',
+                class_mode=class_mode,
                 seed=self.seed,
                 subset='validation',
                 shuffle=shuffle)
