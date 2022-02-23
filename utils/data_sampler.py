@@ -36,6 +36,7 @@ class CustomIterator(DirectoryIterator):
 
         self.weights = target_weights
         self.target_classes = classes
+        self._set_index_array()
 
     def set_subsampling(self, size: int) -> None:
         """ Set subsampling with no target classes.
@@ -45,12 +46,14 @@ class CustomIterator(DirectoryIterator):
         """
         self.reset_target_sampling()
         self.subsample_size = size
+        self._set_index_array()
 
     def reset_subsampling(self) -> None:
         """ Disable sub-sampling and reset dataset size.
         """
         self.subsample_size = None
         self.n = self.old_n
+        self._set_index_array()
     
     def reset_target_sampling(self) -> None:
         """ Disable target class sub-sampling and reset dataset size.
@@ -58,6 +61,7 @@ class CustomIterator(DirectoryIterator):
         self.target_classes = None
         self.weights = None
         self.n = self.old_n
+        self._set_index_array()
 
     def _set_index_array(self):
         """ Generates the index array according to the set sub-sampling rates. If sub-sampling is disabled uses entire default ImageNet.

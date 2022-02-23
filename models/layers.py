@@ -23,6 +23,6 @@ class AttentionLayer(tf.keras.layers.Layer):
 
     def get_config(self):
         conf = super().get_config()
-        conf.update({'input_filter_size': self.w.shape[-1]})
+        conf.update({'input_filter_size': self.kernel.shape[-1]})
 
         return conf
