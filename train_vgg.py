@@ -1,5 +1,4 @@
 import os
-from random import sample
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Must be set before importing TF to supress messages
 os.environ["CUDA_VISIBLE_DEVICES"]= '3'
 
@@ -28,7 +27,7 @@ def load_VGG_model(img_height: int, img_width: int, lr: int, loss: tf.keras.loss
     """
     model = tf.keras.applications.vgg16.VGG16(input_shape=(img_height, img_width, 3))
     model.trainable = trainable
-    model.compile(optimizer=tf.keras.optimizers.SGD(lr),
+    model.compile(optimizer=tf.keras.optimizers.Adam(lr, epsilon=0.1),
                 loss=loss,
                 metrics=metrics)
 
@@ -62,9 +61,8 @@ def main(img_height: int, img_width: int, batch_size: int, lr: int, epochs: int,
 
     # Set augmentation and pre-processing
     train_datagen = CustomDataGenerator(
-                    channel_shift_range = 0.2,
                     horizontal_flip=True,
-                    validation_split=0.2,
+                    validation_split=0.1,
                     preprocessing_function=tf.keras.applications.vgg16.preprocess_input, dtype=tf.float32)
     test_datagen = CustomDataGenerator(
                     preprocessing_function=tf.keras.applications.vgg16.preprocess_input, dtype=tf.float32)
@@ -93,10 +91,11 @@ def main(img_height: int, img_width: int, batch_size: int, lr: int, epochs: int,
         with open(log_path, "w") as my_empty_csv: pass
 
     csv_logger = CSVLogger(log_path, separator=',', append=False)
-    train_history = train_model(model=model, train_set=train_set, val_set=val_set, epochs=epochs, batch_size=batch_size, callbacks=[csv_logger])
+    early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto', baseline=None, restore_best_weights=False)
+    train_history = train_model(model=model, train_set=train_set, val_set=val_set, epochs=epochs, batch_size=batch_size, callbacks=[csv_logger, early_stop])
 
     # Test new accuracy on test-set
     test_model(model, test_set)
 
 if __name__ == '__main__':
-    main(img_height=224, img_width=224, batch_size=32, lr=1e-4, epochs=2, set_subsample=True, sample_size=400000)
+    main(img_height=224, img_width=224, batch_size=64, lr=1e-7, epochs=20, set_subsample=True, sample_size=250000)

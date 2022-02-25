@@ -6,6 +6,8 @@ class AttentionLayer(tf.keras.layers.Layer):
         self.init_vals = init_vals
 
     def build(self, input_shape):
+        """ Initialises attention weights of shape equivalent to the input channels shape for per channel scaling.
+        """
         self.kernel = self.add_weight(
             shape=(input_shape[-1],),
             initializer=tf.keras.initializers.Ones(),
