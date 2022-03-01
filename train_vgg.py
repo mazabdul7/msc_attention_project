@@ -1,4 +1,5 @@
 import os
+from random import sample
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Must be set before importing TF to supress messages
 os.environ["CUDA_VISIBLE_DEVICES"]= '3'
 
@@ -69,8 +70,8 @@ def main(img_height: int, img_width: int, batch_size: int, lr: int, epochs: int,
 
     # Load ImageNet dataset with the VGG augmentation
     loader = DataLoader(batch_size, (img_height, img_width))
-    train_set = loader.load_train_set(aug_train=train_datagen, class_mode='sparse', shuffle=True)
-    val_set = loader.load_val_set(aug_val=train_datagen, class_mode='sparse', shuffle=True)
+    train_set = loader.load_train_set(aug_train=train_datagen, class_mode='categorical', shuffle=True)
+    val_set = loader.load_val_set(aug_val=train_datagen, class_mode='categorical', shuffle=True)
     test_set = loader.load_test_set(aug_test=test_datagen, set_batch_size=False)
 
     if set_subsample:
@@ -81,10 +82,10 @@ def main(img_height: int, img_width: int, batch_size: int, lr: int, epochs: int,
             train_set.set_subsampling(sample_size)
 
     # Load VGG-16 with default as we are not transfer learning
-    model = load_VGG_model(img_height=img_height, img_width=img_width, lr=lr, loss=tf.keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'], trainable=True)
+    model = load_VGG_model(img_height=img_height, img_width=img_width, lr=lr, loss=tf.keras.losses.CategoricalCrossentropy(), metrics=['accuracy'], trainable=True)
 
     # Test current accuracy on test-set
-    test_model(model, test_set)
+    #test_model(model, test_set)
 
     # Train and use CSV logger to store logs
     if not os.path.exists(log_path):
@@ -98,4 +99,4 @@ def main(img_height: int, img_width: int, batch_size: int, lr: int, epochs: int,
     test_model(model, test_set)
 
 if __name__ == '__main__':
-    main(img_height=224, img_width=224, batch_size=64, lr=1e-7, epochs=20, set_subsample=True, sample_size=250000)
+    main(img_height=224, img_width=224, batch_size=64, lr=3e-6, epochs=20, set_subsample=True, sample_size=200000)

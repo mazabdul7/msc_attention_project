@@ -1,5 +1,4 @@
 import os
-from random import sample
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Must be set before importing TF to supress messages
 os.environ["CUDA_VISIBLE_DEVICES"]= '2'
 
@@ -10,7 +9,6 @@ from utils.loader import DataLoader
 from utils.tools import test_model, insert_attention_layer_in_keras
 from utils.data_sampler import CustomDataGenerator, CustomIterator
 from utils.configs import config
-from models.layers import AttentionLayer
 from typing import List
 
 def load_VGG_model(img_height: int, img_width: int, lr: int, loss: tf.keras.losses.Loss, metrics: List[str], trainable: True) -> tf.keras.Model:
@@ -29,7 +27,7 @@ def load_VGG_model(img_height: int, img_width: int, lr: int, loss: tf.keras.loss
     """
     model = tf.keras.applications.vgg16.VGG16(input_shape=(img_height, img_width, 3))
     model.trainable = trainable
-    model.compile(optimizer=tf.keras.optimizers(lr),
+    model.compile(optimizer=tf.keras.optimizers.Adam(lr, epsilon=0.1),
                 loss=loss,
                 metrics=metrics)
 
@@ -53,7 +51,6 @@ def train_model(model: tf.keras.Model, train_set: CustomIterator, val_set: Custo
 
 def main(img_height: int, img_width: int, batch_size: int, lr: int, epochs: int, set_subsample: bool=False, sample_size: int= None, target_classes: List[str]=None, target_weights: List[int]=None) -> None:
     """ Main training loop. """
-    print(tf.__version__)
     # Set configs
     img_height = img_height
     img_width = img_width
@@ -64,7 +61,6 @@ def main(img_height: int, img_width: int, batch_size: int, lr: int, epochs: int,
 
     # Set augmentation and pre-processing
     train_datagen = CustomDataGenerator(
-                    channel_shift_range = 0.2,
                     horizontal_flip=True,
                     validation_split=0.1,
                     preprocessing_function=tf.keras.applications.vgg16.preprocess_input, dtype=tf.float32)
@@ -73,8 +69,8 @@ def main(img_height: int, img_width: int, batch_size: int, lr: int, epochs: int,
 
     # Load ImageNet dataset with the VGG augmentation
     loader = DataLoader(batch_size, (img_height, img_width))
-    train_set = loader.load_train_set(aug_train=train_datagen, class_mode='sparse', shuffle=True)
-    val_set = loader.load_val_set(aug_val=train_datagen, class_mode='sparse', shuffle=True)
+    train_set = loader.load_train_set(aug_train=train_datagen, class_mode='categorical', shuffle=True)
+    val_set = loader.load_val_set(aug_val=train_datagen, class_mode='categorical', shuffle=True)
     test_set = loader.load_test_set(aug_test=test_datagen, set_batch_size=False)
 
     if set_subsample:
@@ -85,17 +81,14 @@ def main(img_height: int, img_width: int, batch_size: int, lr: int, epochs: int,
             train_set.set_subsampling(sample_size)
 
     # Load VGG-16 with default as we are not transfer learning
-    model = load_VGG_model(img_height=img_height, img_width=img_width, lr=lr, loss=tf.keras.losses.SparseCategoricalCrossentropy(), metrics=['accuracy'], trainable=True)
+    model = load_VGG_model(img_height=img_height, img_width=img_width, lr=lr, loss=tf.keras.losses.CategoricalCrossentropy(), metrics=['accuracy'], trainable=True)
     
     # Insert attention layer before last block
     model = insert_attention_layer_in_keras(model, ['block5_conv1'])
-    model.compile(optimizer=tf.keras.optimizers.Adam(lr),
-                loss=tf.keras.losses.SparseCategoricalCrossentropy(),
+    model.compile(optimizer=tf.keras.optimizers.Adam(lr, epsilon=0.1),
+                loss=tf.keras.losses.CategoricalCrossentropy(),
                 metrics=['accuracy'])
     model.summary()
-
-    # Test current accuracy on test-set
-    #test_model(model, test_set)
 
     # Train and use CSV logger to store logs
     if not os.path.exists(log_path):
@@ -108,4 +101,4 @@ def main(img_height: int, img_width: int, batch_size: int, lr: int, epochs: int,
     test_model(model, test_set)
 
 if __name__ == '__main__':
-    main(img_height=224, img_width=224, batch_size=64, lr=1e-7, epochs=20, set_subsample=True, sample_size=500000)
+    main(img_height=224, img_width=224, batch_size=64, lr=3e-6, epochs=10, set_subsample=True, sample_size=200000)

@@ -68,7 +68,7 @@ class CustomIterator(DirectoryIterator):
             Note: This function is naturally called at the end of each epoch through model.fit() - must be called to resample!
         """
         if not self.target_classes:
-            self.index_array = np.arange(self.n)
+            self.index_array = np.arange(self.old_n)
             if self.subsample_size:
                 sample = np.random.choice(self.index_array, replace=False, size=self.subsample_size)
                 self.index_array = sample
@@ -94,6 +94,7 @@ class CustomIterator(DirectoryIterator):
 
         if self.shuffle:
             np.random.shuffle(self.index_array)
+        self.index_array = list(self.index_array)
 
 class CustomDataGenerator(ImageDataGenerator):
     """ Custom ImageDataGenerator that implements the above sub-sampling directory iterator with specified data augmentation. """

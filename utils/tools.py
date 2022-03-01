@@ -39,7 +39,7 @@ def insert_attention_layer_in_keras(model: Model, layer_names: List[str]) -> Mod
     x = layers[0].output
     for i in range(1, len(layers)):
         if layers[i]._name in layer_names:
-            x = AttentionLayer(name='attention ' + layers[i]._name)(x)
+            x = AttentionLayer(name='attention_' + layers[i]._name)(x)
         x = layers[i](x)
 
     new_model = tf.keras.models.Model(inputs=layers[0].input, outputs=x)
