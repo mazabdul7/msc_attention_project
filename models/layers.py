@@ -31,7 +31,7 @@ class AttentionLayer(tf.keras.layers.Layer):
 
         return conf
 
-class ProjectionttentionLayer(tf.keras.layers.Layer):
+class ProjectionAttentionLayer(tf.keras.layers.Layer):
     """ Latent attention seed layer that projects via an internal step-up matrix.
     """
     def __init__(self, p_mat, trainable=True, name=None, dtype=None, dynamic=False, init_vals=None, **kwargs):
