@@ -13,7 +13,7 @@ class CustomIterator(DirectoryIterator):
         self.old_n = int(self.n)
         self.cls_to_file_idx = dict()
 
-    def set_target_sampling(self, target_classes: List[str], target_weights: List[int]) -> None:
+    def set_target_sampling(self, target_classes: List[str], target_weights: List[int], force_class_sampling = False) -> None:
         """ Enables and sets targetted sub-sampling weights for the target classes.
 
         Args:
@@ -36,9 +36,9 @@ class CustomIterator(DirectoryIterator):
 
         self.weights = target_weights
         self.target_classes = classes
-        self._set_index_array()
+        self._set_index_array(force_class_sampling=force_class_sampling)
 
-    def set_subsampling(self, size: int) -> None:
+    def set_subsampling(self, size: int, force_class_sampling = False) -> None:
         """ Set subsampling with no target classes.
 
         Args:
@@ -46,7 +46,12 @@ class CustomIterator(DirectoryIterator):
         """
         self.reset_target_sampling()
         self.subsample_size = size
-        self._set_index_array()
+
+        # Mapping between class and its indices in the dataset
+        for cl in range(self.num_classes):
+            self.cls_to_file_idx[cl] = list(np.nonzero(np.array(self.classes)==cl)[0])
+
+        self._set_index_array(force_class_sampling=force_class_sampling)
 
     def reset_subsampling(self) -> None:
         """ Disable sub-sampling and reset dataset size.
@@ -63,15 +68,23 @@ class CustomIterator(DirectoryIterator):
         self.n = self.old_n
         self._set_index_array()
 
-    def _set_index_array(self):
+    def _set_index_array(self, force_class_sampling = False):
         """ Generates the index array according to the set sub-sampling rates. If sub-sampling is disabled uses entire default ImageNet.
+            If force_class_sampling enabled, forces a minimum number of examples per class instead of pool sampling.
             Note: This function is naturally called at the end of each epoch through model.fit() - must be called to resample!
         """
         if not self.target_classes:
             self.index_array = np.arange(self.old_n)
             if self.subsample_size:
-                sample = np.random.choice(self.index_array, replace=False, size=self.subsample_size)
-                self.index_array = sample
+                if force_class_sampling:
+                    self.index_array = list()
+                    class_sample_size = int(self.subsample_size / len(self.cls_to_file_idx.keys()))
+                    for cl in self.cls_to_file_idx.keys():
+                        sample = np.random.choice(self.cls_to_file_idx[cl], replace=False, size=class_sample_size)
+                        self.index_array.extend(sample.tolist())
+                else:
+                    sample = np.random.choice(self.index_array, replace=False, size=self.subsample_size)
+                    self.index_array = sample
                 self.n = int(self.subsample_size)
         else:
             self.index_array = []
@@ -84,12 +97,19 @@ class CustomIterator(DirectoryIterator):
                     self.index_array.extend(sample)
             remainder = max_size - len(self.index_array)
             if remainder != 0:
-                remaining_classes = []
-                for cl in self.cls_to_file_idx.keys():
-                    if cl not in self.target_classes:
-                        remaining_classes.extend(self.cls_to_file_idx[cl])
-                sample = np.random.choice(remaining_classes, replace=False, size=int(remainder))
-                self.index_array.extend(sample)
+                if force_class_sampling:
+                    class_sample_size = int(remainder / (len(self.cls_to_file_idx.keys()) - len(self.target_classes)))
+                    for cl in self.cls_to_file_idx.keys():
+                        if cl not in self.target_classes:
+                            sample = np.random.choice(self.cls_to_file_idx[cl], replace=False, size=class_sample_size)
+                            self.index_array.extend(sample)
+                else:
+                    remaining_classes = []
+                    for cl in self.cls_to_file_idx.keys():
+                        if cl not in self.target_classes:
+                            remaining_classes.extend(self.cls_to_file_idx[cl])
+                    sample = np.random.choice(remaining_classes, replace=False, size=int(remainder))
+                    self.index_array.extend(sample)
             self.n = int(max_size)
 
         if self.shuffle:

@@ -46,12 +46,14 @@ class ProjectionAttentionLayer(tf.keras.layers.Layer):
             shape=(1, self.projection_mat.shape[0],),
             initializer=tf.keras.initializers.Zeros(),
             trainable=True,
-            constraint=tf.keras.constraints.NonNeg()
+            constraint=tf.keras.constraints.NonNeg(),
+            name='seeds'
         )
         self.bias = self.add_weight(
             shape=(1, input_shape[-1],),
             initializer=tf.keras.initializers.Ones(),
             trainable=True,
+            name='bias'
         )
 
     def call(self, inputs):

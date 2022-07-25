@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import Model
 from utils.data_sampler import CustomIterator
-from models.layers import AttentionLayer
+from models.layers import ProjectionAttentionLayer
 
 def test_model(model: Model, test_set: CustomIterator) -> None:
     """ Test the passed model for its Top-1 accuracy on the passed test set.
@@ -24,7 +24,7 @@ def test_model(model: Model, test_set: CustomIterator) -> None:
     print(f'Model Accuracy on test-set: {accuracy}')
     print('-----------------------------------------\n')
 
-def insert_attention_layer_in_keras(model: Model, layer_names: List[str]) -> Model:
+def insert_attention_layer_in_keras(p_mat, model: Model, layer_names: List[str]) -> Model:
     """ Insert an attention layer preceeding the passed layer name within the model
 
     Args:
@@ -39,7 +39,7 @@ def insert_attention_layer_in_keras(model: Model, layer_names: List[str]) -> Mod
     x = layers[0].output
     for i in range(1, len(layers)):
         if layers[i]._name in layer_names:
-            x = AttentionLayer(name='attention_' + layers[i]._name)(x)
+            x = ProjectionAttentionLayer(p_mat=p_mat, name='attention_' + layers[i]._name)(x)
         x = layers[i](x)
 
     new_model = tf.keras.models.Model(inputs=layers[0].input, outputs=x)
