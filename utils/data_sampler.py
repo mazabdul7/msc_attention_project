@@ -77,11 +77,14 @@ class CustomIterator(DirectoryIterator):
             self.index_array = np.arange(self.old_n)
             if self.subsample_size:
                 if force_class_sampling:
+                    remaining_classes = list()
                     self.index_array = list()
                     class_sample_size = int(self.subsample_size / len(self.cls_to_file_idx.keys()))
                     for cl in self.cls_to_file_idx.keys():
                         sample = np.random.choice(self.cls_to_file_idx[cl], replace=False, size=class_sample_size)
                         self.index_array.extend(sample.tolist())
+                        remaining_classes.extend([fol for fol in self.cls_to_file_idx[cl] if fol not in sample.tolist()])
+                    self.index_array.extend(np.random.choice(remaining_classes, replace=False, size=self.subsample_size-len(self.index_array)).tolist())
                 else:
                     sample = np.random.choice(self.index_array, replace=False, size=self.subsample_size)
                     self.index_array = sample
@@ -98,11 +101,14 @@ class CustomIterator(DirectoryIterator):
             remainder = max_size - len(self.index_array)
             if remainder != 0:
                 if force_class_sampling:
+                    remaining_classes = []
                     class_sample_size = int(remainder / (len(self.cls_to_file_idx.keys()) - len(self.target_classes)))
                     for cl in self.cls_to_file_idx.keys():
                         if cl not in self.target_classes:
-                            sample = np.random.choice(self.cls_to_file_idx[cl], replace=False, size=class_sample_size)
+                            sample = np.random.choice(self.cls_to_file_idx[cl], replace=False, size=class_sample_size).tolist()
                             self.index_array.extend(sample)
+                            remaining_classes.extend([fol for fol in self.cls_to_file_idx[cl] if fol not in sample])
+                    self.index_array.extend(np.random.choice(remaining_classes, replace=False, size=max_size-len(self.index_array)).tolist())
                 else:
                     remaining_classes = []
                     for cl in self.cls_to_file_idx.keys():
