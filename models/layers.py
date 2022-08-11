@@ -1,4 +1,19 @@
 import tensorflow as tf
+import numpy as np
+
+class NonNegConstraint(tf.keras.constraints.Constraint):
+    """Constrains seed tensors to ensure projected weights do not go below 0."""
+
+    def __init__(self, proj_mat):
+        self.proj_mat = proj_mat
+        self.min_value = -1
+        self.epsilon = 1e-7
+
+    def __call__(self, w):
+        projected_attention = tf.matmul(w, self.proj_mat)
+        desired = tf.clip_by_value(projected_attention, self.min_value, np.inf)
+
+        return w * tf.reduce_min((desired / (projected_attention - self.epsilon)))
 
 class AttentionLayer(tf.keras.layers.Layer):
     """ Regular attention layer (Luo et al. 2021)
@@ -44,15 +59,15 @@ class ProjectionAttentionLayer(tf.keras.layers.Layer):
         """
         self.seeds = self.add_weight(
             shape=(1, self.projection_mat.shape[0],),
-            initializer=tf.keras.initializers.Zeros(),
+            initializer=tf.keras.initializers.Constant(value=-9),
             trainable=True,
-            constraint=tf.keras.constraints.NonNeg(),
+            constraint=NonNegConstraint(self.projection_mat),
             name='seeds'
         )
         self.bias = self.add_weight(
             shape=(1, input_shape[-1],),
             initializer=tf.keras.initializers.Ones(),
-            trainable=True,
+            trainable=False,
             name='bias'
         )
 

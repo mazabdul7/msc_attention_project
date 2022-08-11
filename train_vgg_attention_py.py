@@ -1,4 +1,3 @@
-from email.mime import base
 import sys
 gpu_dev = sys.argv[3]
 
@@ -16,6 +15,7 @@ from utils.data_sampler import CustomDataGenerator, CustomIterator
 from utils.configs import config
 from typing import List
 import pymf
+import pickle
 
 def load_VGG_model(img_height: int, img_width: int, lr: int, loss: tf.keras.losses.Loss, metrics: List[str], trainable: True) -> tf.keras.Model:
     """ Loads VGG-16 model.
@@ -65,9 +65,9 @@ if __name__ == '__main__':
     img_height = 224
     img_width = 224
     batch_size = 128
-    epochs = 1000
-    lr = 2e-2
-    base_path = os.path.join('models', 'task_models', fol_name, str(dims))
+    epochs = 35
+    lr = 5e-2
+    base_path = os.path.join('models', 'task_models_fixed_test', fol_name, str(dims))
     os.makedirs(base_path)
     model_path = os.path.join(base_path, 'model_weights')
     log_path = os.path.join(base_path, 'log.csv')
@@ -91,16 +91,10 @@ if __name__ == '__main__':
     model = tf.keras.models.load_model('models/vgg_trained')
     model.trainable = False
 
-    # Get layer kernel
-    kernel = model.get_layer('block4_conv3').kernel
-    flat_kernel = tf.reshape(kernel, [-1, kernel.shape[-1]]).numpy()
-
     # Get projection matrix via SNMF
-    n_comp = dims
-
-    nmf = pymf.SNMF(flat_kernel, num_bases=n_comp)
-    nmf.factorize(niter=400)
-    p_mat = nmf.H
+    with open('proj_mats_norm.pkl', 'rb') as f:
+        p_dict  = pickle.load(f)
+    p_mat = p_dict[dims]
 
     # Insert attention layer
     model = insert_attention_layer_in_keras(p_mat, model, ['block5_conv1'])
@@ -114,7 +108,6 @@ if __name__ == '__main__':
 
     # Enable subsampling equal to standard size
     train_set.set_target_sampling([fol_name], [0.5], force_class_sampling=True)
-    #val_set.set_target_sampling([fol_name], [0.5], force_class_sampling=True)
 
 
     # Train and use CSV logger to store logs
@@ -123,7 +116,14 @@ if __name__ == '__main__':
 
     csv_logger = CSVLogger(log_path, separator=',', append=False)
     early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=3, verbose=0, mode='auto', baseline=None, restore_best_weights=False)
-    train_history = train_model(model=model, train_set=train_set, val_set=val_set, epochs=epochs, batch_size=batch_size, callbacks=[csv_logger, early_stop])
+    def scheduler(epoch, lr):
+        if epoch < 25:
+            return lr
+        else:
+            return lr * tf.math.exp(-0.01)
+    lr_sched = tf.keras.callbacks.LearningRateScheduler(scheduler)
+
+    train_history = train_model(model=model, train_set=train_set, val_set=None, epochs=epochs, batch_size=batch_size, callbacks=[csv_logger, early_stop, lr_sched])
 
     print('\nTraining Finished!')
     print(f'Saving Model Weights to {model_path}')
@@ -131,6 +131,6 @@ if __name__ == '__main__':
     print('Weights Saved!')
 
 
-    test_model(model, test_set)
-    a = model.get_layer('attention_block5_conv1').seeds.numpy()
-    print(f'Sparsity in seed weights: {np.sum(a==0)/(a.shape[0]*a.shape[1])}')
+    #test_model(model, test_set)
+    # a = model.get_layer('attention_block5_conv1').seeds.numpy()
+    # print(f'Sparsity in seed weights: {round(np.sum(a==0)/(a.shape[0]*a.shape[1]), 2)}')

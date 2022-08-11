@@ -21,7 +21,7 @@ def test_model(model: Model, test_set: CustomIterator) -> None:
     print('Computing accuracy...')
     accuracy = np.sum(pred == cls)/len(pred)
     print('\n-----------------------------------------')
-    print(f'Model Accuracy on test-set: {accuracy}')
+    print(f'Model Accuracy on test-set: {round(accuracy, 4)}')
     print('-----------------------------------------\n')
 
 def insert_attention_layer_in_keras(p_mat, model: Model, layer_names: List[str]) -> Model:
