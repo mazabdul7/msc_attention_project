@@ -65,12 +65,12 @@ if __name__ == '__main__':
     img_height = 224
     img_width = 224
     batch_size = 128
-    epochs = 35
+    epochs = 25
     lr = 5e-2
-    base_path = os.path.join('models', 'task_models_fixed_test', fol_name, str(dims))
-    os.makedirs(base_path)
-    model_path = os.path.join(base_path, 'model_weights')
-    log_path = os.path.join(base_path, 'log.csv')
+    base_path = os.path.join('models', 'task_models_fixed', fol_name, str(dims))
+    # os.makedirs(base_path)
+    # model_path = os.path.join(base_path, 'model_weights')
+    # log_path = os.path.join(base_path, 'log.csv')
 
     # Set augmentation and pre-processing
     train_datagen = CustomDataGenerator(
@@ -86,49 +86,53 @@ if __name__ == '__main__':
     val_set = loader.load_val_set(aug_val=train_datagen, class_mode='categorical', shuffle=True)
     test_set = loader.load_test_set(aug_test=test_datagen, set_batch_size=False)
 
-    # Load pre-trained VGG-16 model
-    tf.keras.backend.clear_session()
-    model = tf.keras.models.load_model('models/vgg_trained')
-    model.trainable = False
+    for i in [2, 3]:
+        model_path = os.path.join(base_path, 'model_weights' + str(i))
+        log_path = os.path.join(base_path, f'log{i}.csv')
 
-    # Get projection matrix via SNMF
-    with open('proj_mats_norm.pkl', 'rb') as f:
-        p_dict  = pickle.load(f)
-    p_mat = p_dict[dims]
+        # Load pre-trained VGG-16 model
+        tf.keras.backend.clear_session()
+        model = tf.keras.models.load_model('models/vgg_trained')
+        model.trainable = False
 
-    # Insert attention layer
-    model = insert_attention_layer_in_keras(p_mat, model, ['block5_conv1'])
+        # Get projection matrix via SNMF
+        with open('proj_mats_norm.pkl', 'rb') as f:
+            p_dict  = pickle.load(f)
+        p_mat = p_dict[dims]
 
-
-    # Compile model
-    model.compile(optimizer=tf.keras.optimizers.Adam(lr),
-                    loss=tf.keras.losses.CategoricalCrossentropy(),
-                    metrics=['accuracy'])
+        # Insert attention layer
+        model = insert_attention_layer_in_keras(p_mat, model, ['block5_conv1'])
 
 
-    # Enable subsampling equal to standard size
-    train_set.set_target_sampling([fol_name], [0.5], force_class_sampling=True)
+        # Compile model
+        model.compile(optimizer=tf.keras.optimizers.Adam(lr),
+                        loss=tf.keras.losses.CategoricalCrossentropy(),
+                        metrics=['accuracy'])
 
 
-    # Train and use CSV logger to store logs
-    if not os.path.exists(log_path):
-        with open(log_path, "w") as my_empty_csv: pass
+        # Enable subsampling equal to standard size
+        train_set.set_target_sampling([fol_name], [0.5], force_class_sampling=True)
 
-    csv_logger = CSVLogger(log_path, separator=',', append=False)
-    early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=3, verbose=0, mode='auto', baseline=None, restore_best_weights=False)
-    def scheduler(epoch, lr):
-        if epoch < 25:
-            return lr
-        else:
-            return lr * tf.math.exp(-0.01)
-    lr_sched = tf.keras.callbacks.LearningRateScheduler(scheduler)
 
-    train_history = train_model(model=model, train_set=train_set, val_set=None, epochs=epochs, batch_size=batch_size, callbacks=[csv_logger, early_stop, lr_sched])
+        # Train and use CSV logger to store logs
+        if not os.path.exists(log_path):
+            with open(log_path, "w") as my_empty_csv: pass
 
-    print('\nTraining Finished!')
-    print(f'Saving Model Weights to {model_path}')
-    model.save_weights(model_path)
-    print('Weights Saved!')
+        csv_logger = CSVLogger(log_path, separator=',', append=False)
+        early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=3, verbose=0, mode='auto', baseline=None, restore_best_weights=False)
+        def scheduler(epoch, lr):
+            if epoch < 15:
+                return lr
+            else:
+                return lr * tf.math.exp(-0.01)
+        lr_sched = tf.keras.callbacks.LearningRateScheduler(scheduler)
+
+        train_history = train_model(model=model, train_set=train_set, val_set=None, epochs=epochs, batch_size=batch_size, callbacks=[csv_logger, early_stop, lr_sched])
+
+        print('\nTraining Finished!')
+        print(f'Saving Model Weights to {model_path}')
+        model.save_weights(model_path)
+        print('Weights Saved!')
 
 
     #test_model(model, test_set)

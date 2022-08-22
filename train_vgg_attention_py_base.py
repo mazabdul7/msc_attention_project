@@ -66,8 +66,8 @@ if __name__ == '__main__':
     img_height = 224
     img_width = 224
     batch_size = 128
-    epochs = 3
-    lr = 5e-1
+    epochs = 25
+    lr = 5e-2
     base_path = os.path.join('models', 'baseline_fixed_test', str(dims))
     os.makedirs(base_path)
     model_path = os.path.join(base_path, 'model_weights')

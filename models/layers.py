@@ -59,7 +59,7 @@ class ProjectionAttentionLayer(tf.keras.layers.Layer):
         """
         self.seeds = self.add_weight(
             shape=(1, self.projection_mat.shape[0],),
-            initializer=tf.keras.initializers.Constant(value=-9),
+            initializer=tf.keras.initializers.Zeros(),
             trainable=True,
             constraint=NonNegConstraint(self.projection_mat),
             name='seeds'
