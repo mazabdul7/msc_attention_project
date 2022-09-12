@@ -1,8 +1,7 @@
 **/__pycache__
-**i.ipynb
-**test.py
-**class_var.ipynb
 **vgg_trained
 **baselines
 **task_models**
-**baseline**
+**task_final
+**baseline_fixed
+**att_final.py

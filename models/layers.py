@@ -28,7 +28,8 @@ class AttentionLayer(tf.keras.layers.Layer):
         self.kernel = self.add_weight(
             shape=(input_shape[-1],),
             initializer=tf.keras.initializers.Ones(),
-            trainable=True
+            trainable=True,
+            name='weights'
         )
 
     def call(self, inputs):
