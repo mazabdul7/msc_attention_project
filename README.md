@@ -1,3 +1,3 @@
 # Attentional Mechanisms for Convolutional Neural Networks - MSc Project
 supporting repo for experiments and mechanisms developed...
-report will be tagged once marked
+thesis will be tagged once marked
